@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daniel no Campeonato Brasileiro de Karatê 2026 • AKA VNI</title>
+  
+  <meta name="description" content="Apoie o atleta Daniel (11 anos), campeão estadual da AKA VNI em Venda Nova do Imigrante/ES, rumo às Finais do Campeonato Brasileiro e Estudantil de Karatê em Londrina/PR." />
+  
+  <!-- Tipografia Marcial e Moderna -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@300;400;500;600;700;800&family=Noto+Serif+JP:wght@700;900&family=Syne:wght@700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Bibliotecas WebGL, Animação, Ícones e QR Code -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            syne: ['Syne', 'sans-serif'],
+            cinzel: ['Cinzel', 'serif'],
+            jp: ['"Noto Serif JP"', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            aka: {
+              obsidian: '#070709',
+              surface: '#111116',
+              card: '#16161d',
+              border: '#24242e',
+              red: '#C41E24',
+              crimson: '#8B0000',
+              gold: '#D4AF37',
+              amber: '#fbbf24',
+              dojo: '#f8fafc'
+            }
+          },
+          boxShadow: {
+            'aka-fire': '0 0 35px -5px rgba(196, 30, 36, 0.5), 0 0 15px -2px rgba(212, 175, 55, 0.3)',
+            'bento': '0 20px 50px -10px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --mouse-x: 50%;
+      --mouse-y: 50%;
+    }
+
+    body {
+      background-color: #070709;
+      color: #f8fafc;
+      overflow-x: hidden;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    }
+
+    #webgl-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .tatami-texture {
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 40px 40px, 40px 40px;
+    }
+
+    @keyframes spinClockwise {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes kiPulse {
+      0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 25px rgba(196, 30, 36, 0.35));
+      }
+      50% {
+        transform: scale(1.03);
+        filter: drop-shadow(0 0 40px rgba(196, 30, 36, 0.6)) drop-shadow(0 0 15px rgba(212, 175, 55, 0.3));
+      }
+    }
+
+    .animate-ki-breathe {
+      animation: kiPulse 5s ease-in-out infinite;
+    }
+
+    /* 3D Tilt do Medalhão e da Logo do Patrocinador */
+    .emblem-3d-wrapper, .sponsor-3d-wrapper {
+      perspective: 1000px;
+      transform-style: preserve-3d;
+    }
+    .emblem-3d-card, .sponsor-3d-card {
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.4, 1), box-shadow 0.3s ease;
+      will-change: transform;
+    }
+
+    .conic-border-btn {
+      position: relative;
+      border-radius: 9999px;
+      padding: 2px;
+      overflow: hidden;
+      display: inline-flex;
+    }
+    .conic-border-btn::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(from 0deg, transparent 0 260deg, #C41E24 290deg, #D4AF37 335deg, #C41E24 360deg);
+      animation: spinClockwise 3.5s linear infinite;
+    }
+    .conic-inner {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      border-radius: 9999px;
+      background: #111116;
+    }
+
+    .aka-bento-card {
+      position: relative;
+      background: rgba(22, 22, 29, 0.78);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    }
+    .aka-bento-card:hover {
+      border-color: rgba(196, 30, 36, 0.45);
+      box-shadow: 0 16px 45px -12px rgba(196, 30, 36, 0.25);
+    }
+
+    .gold-sheen {
+      background: linear-gradient(135deg, #ffffff 0%, #fde047 35%, #D4AF37 65%, #C41E24 100%);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hanko-stamp {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid #C41E24;
+      border-radius: 4px;
+      color: #C41E24;
+      font-family: 'Noto Serif JP', serif;
+      font-weight: 900;
+      box-shadow: 0 0 10px rgba(196, 30, 36, 0.25), inset 0 0 6px rgba(196, 30, 36, 0.15);
+      user-select: none;
+    }
+
+    .photo-frame {
+      position: relative;
+      overflow: hidden;
+      border-radius: 1.25rem;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      background-color: #121217;
+    }
+    .photo-frame:hover {
+      transform: translateY(-4px) scale(1.015);
+      border-color: rgba(212, 175, 55, 0.6);
+      box-shadow: 0 20px 40px -15px rgba(196, 30, 36, 0.45);
+    }
+    .photo-frame img {
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .photo-frame:hover img {
+      transform: scale(1.03);
+    }
+
+    ::-webkit-scrollbar { width: 7px; }
+    ::-webkit-scrollbar-track { background: #070709; }
+    ::-webkit-scrollbar-thumb { background: #24242e; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #C41E24; }
+  </style>
+</head>
+
+<body class="selection:bg-aka-red selection:text-white">
+
+  <!-- CAMADA 1: WebGL Canvas (Partículas de Energia Ki em 3D) -->
+  <div id="webgl-bg"></div>
+
+  <!-- Textura de Linhas de Tatame no Fundo -->
+  <div class="fixed inset-0 tatami-texture pointer-events-none z-[1]"></div>
+
+  <!-- MARCA D'ÁGUA DE FUNDO: Logo Oficial AKA VNI -->
+  <div class="fixed inset-0 pointer-events-none z-[1] flex items-center justify-center overflow-hidden select-none">
+    <div class="relative w-[340px] h-[340px] sm:w-[580px] sm:h-[580px] md:w-[720px] md:h-[720px] rounded-full overflow-hidden opacity-[0.05] sm:opacity-[0.07]" style="animation: spinClockwise 140s linear infinite;">
+      
+      <!-- SVG Vetorial Nativo Oficial da AKA VNI -->
+      <svg viewBox="0 0 300 300" class="absolute inset-0 w-full h-full select-none pointer-events-none">
+        <defs>
+          <path id="bg-crest-path-top" d="M 52,150 A 98,98 0 0,1 248,150" fill="none" />
+          <path id="bg-crest-path-bottom" d="M 58,150 A 92,92 0 0,0 242,150" fill="none" />
+          <radialGradient id="bg-sun-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#DC2626" />
+            <stop offset="100%" stop-color="#991B1B" />
+          </radialGradient>
+        </defs>
+        <circle cx="150" cy="150" r="146" fill="#08080a" stroke="#2a2a32" stroke-width="2" />
+        <circle cx="150" cy="150" r="95" fill="url(#bg-sun-glow)" stroke="#6b0e11" stroke-width="1.5" />
+        <path d="M 58,178 Q 150,162 242,174" stroke="#08080a" stroke-width="5" fill="none" />
+        <path d="M 60,206 Q 150,192 240,200" stroke="#08080a" stroke-width="5" fill="none" />
+        <polygon points="76,104 228,106 216,119 88,119" fill="#ffffff" />
+        <polygon points="86,134 236,134 225,147 97,147" fill="#ffffff" />
+        <rect x="135" y="108" width="20" height="126" fill="#ffffff" />
+        <rect x="182" y="122" width="17" height="48" fill="#ffffff" />
+        <text font-family="'Syne', 'Inter', sans-serif" font-size="28" font-weight="900" fill="#ffffff" letter-spacing="4.5">
+          <textPath href="#bg-crest-path-top" startOffset="50%" text-anchor="middle">AKA VNI</textPath>
+        </text>
+        <text font-family="'Brush Script MT', cursive" font-size="28" font-weight="bold" font-style="italic" fill="#ffffff" letter-spacing="2">
+          <textPath href="#bg-crest-path-bottom" startOffset="50%" text-anchor="middle">artes marciais</textPath>
+        </text>
+        <text x="28" y="142" font-family="'Noto Serif JP', serif" font-size="21" font-weight="900" fill="#ffffff" text-anchor="middle">集</text>
+        <text x="28" y="170" font-family="'Noto Serif JP', serif" font-size="21" font-weight="900" fill="#ffffff" text-anchor="middle">中</text>
+        <text x="272" y="142" font-family="'Noto Serif JP', serif" font-size="21" font-weight="900" fill="#ffffff" text-anchor="middle">専</text>
+        <text x="272" y="170" font-family="'Noto Serif JP', serif" font-size="21" font-weight="900" fill="#ffffff" text-anchor="middle">念</text>
+      </svg>
+
+      <img id="bg-logo-img" 
+           src="aka.png" 
+           alt="AKA VNI Fundo" 
+           class="relative z-10 w-full h-full object-cover"
+           onerror="tratarErroLogo(this)">
+    </div>
+  </div>
+
+  <header class="fixed top-0 left-0 right-0 z-50 px-4 sm:px-8 py-3.5 backdrop-blur-2xl bg-aka-obsidian/85 border-b border-white/5 transition-all">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      
+      <!-- LOGO / BRASÃO AKA VNI -->
+      <a href="#" class="flex items-center space-x-3.5 group">
+        <div class="relative w-11 h-11 rounded-full overflow-hidden shadow-aka-fire group-hover:scale-105 transition-all flex-shrink-0 bg-black flex items-center justify-center border border-aka-gold/40">
+          
+          <!-- Imagem Local aka.png com SVG oficial por baixo para nunca ficar vazio -->
+          <svg viewBox="0 0 300 300" class="absolute inset-0 w-full h-full select-none pointer-events-none">
+            <defs>
+              <path id="nav-path-top" d="M 52,150 A 98,98 0 0,1 248,150" fill="none" />
+              <path id="nav-path-bottom" d="M 58,150 A 92,92 0 0,0 242,150" fill="none" />
+            </defs>
+            <circle cx="150" cy="150" r="146" fill="#0c0c0e" stroke="#2a2a32" stroke-width="2" />
+            <circle cx="150" cy="150" r="95" fill="#B91C1C" />
+            <path d="M 58,178 Q 150,162 242,174" stroke="#0c0c0e" stroke-width="5" fill="none" />
+            <path d="M 60,206 Q 150,192 240,200" stroke="#0c0c0e" stroke-width="5" fill="none" />
+            <polygon points="76,104 228,106 216,119 88,119" fill="#ffffff" />
+            <polygon points="86,134 236,134 225,147 97,147" fill="#ffffff" />
+            <rect x="135" y="108" width="20" height="126" fill="#ffffff" />
+            <rect x="182" y="122" width="17" height="48" fill="#ffffff" />
+            <text font-family="'Syne', sans-serif" font-size="28" font-weight="900" fill="#ffffff" letter-spacing="4.5">
+              <textPath href="#nav-path-top" startOffset="50%" text-anchor="middle">AKA VNI</textPath>
+            </text>
+            <text font-family="'Brush Script MT', cursive" font-size="28" font-weight="bold" font-style="italic" fill="#ffffff" letter-spacing="2">
+              <textPath href="#nav-path-bottom" startOffset="50%" text-anchor="middle">artes marciais</textPath>
+            </text>
+            <text x="28" y="142" font-family="'Noto Serif JP', serif" font-size="21" font-weight="900" fill="#ffffff" text-anchor="middle">集</text>
+            <text x="28" y="170" font-family="'Noto Serif JP', serif" font-size="21" font-weight="900" fill="#ffffff" text-anchor="middle">中</text>
+            <text x="272" y="142" font-family="'Noto Serif JP', serif" font-size="21" font-weight="900" fill="#ffffff" text-anchor="middle">専</text>
+            <text x="272" y="170" font-family="'Noto Serif JP', serif" font-size="21" font-weight="900" fill="#ffffff" text-anchor="middle">念</text>
+          </svg>
+
+          <img id="nav-logo-img" 
+               src="aka.png" 
+               alt="AKA VNI" 
+               class="relative z-10 w-full h-full object-cover"
+               onerror="tratarErroLogo(this)">
+        </div>
+
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <span class="font-syne font-black text-sm tracking-wider text-white">AKA VNI</span>
+            <span class="hanko-stamp px-1.5 py-0.2 text-[8px] tracking-tighter">押忍 OSS</span>
+          </div>
+          <span class="text-[10px] font-mono font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-aka-red animate-pulse"></span>
+            Daniel Lorenzoni • 11 Anos • Venda Nova/ES
+          </span>
+        </div>
+      </a>
+
+      <!-- Menu Rápido Desktop -->
+      <nav class="hidden md:flex items-center space-x-7 text-xs font-bold uppercase tracking-wider text-zinc-400 font-mono">
+        <a href="#galeria-tatame" class="hover:text-aka-gold transition-colors flex items-center gap-1.5">
+          <span class="text-aka-gold font-jp text-sm">写</span> Galeria Tatame
+        </a>
+        <a href="#bushido" class="hover:text-aka-red transition-colors flex items-center gap-1.5">
+          <span class="text-aka-red font-jp text-sm">集中</span> O Atleta
+        </a>
+        <a href="#terminal-pix" class="hover:text-white transition-colors flex items-center gap-1.5">
+          <span class="text-emerald-400 font-jp text-sm">勝</span> Contribuir Pix
+        </a>
+      </nav>
+
+      <!-- Botões de Ação Topo -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <button onclick="copiarPixAtivo()" class="conic-border-btn shadow-aka-fire active:scale-95 transition-transform">
+          <div class="conic-inner px-4 py-2 flex items-center gap-2 text-xs font-black tracking-wider text-aka-gold">
+            <i data-lucide="zap" class="w-3.5 h-3.5 text-aka-red fill-current"></i>
+            <span>PIX IMEDIATO</span>
+          </div>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="relative z-10 pt-24 sm:pt-28">
+
+    <section class="min-h-[80vh] flex flex-col justify-center items-center px-4 sm:px-6 max-w-6xl mx-auto text-center relative">
+      
+      <!-- MEDALHÃO OFICIAL AKA VNI COM 3D TILT -->
+      <div class="emblem-3d-wrapper my-4 flex flex-col items-center justify-center cursor-pointer select-none" id="emblem-container" onclick="tocarTaiko()">
+        <div class="relative group">
+          <div class="absolute -inset-6 rounded-full bg-gradient-to-r from-aka-red via-aka-gold to-aka-red opacity-35 blur-2xl group-hover:opacity-75 transition-opacity duration-700 animate-ki-breathe pointer-events-none"></div>
+          
+          <div class="emblem-3d-card relative w-36 h-36 sm:w-44 sm:h-44 rounded-full p-2 bg-gradient-to-b from-aka-gold via-zinc-800 to-aka-red shadow-2xl border border-white/25">
+            <div class="w-full h-full rounded-full p-1 bg-gradient-to-tr from-zinc-950 via-zinc-900 to-black shadow-inner flex items-center justify-center border border-white/10">
+              <div class="w-full h-full rounded-full overflow-hidden bg-black flex items-center justify-center border-2 border-aka-gold/40 relative">
+                
+                <!-- SVG Vetorial Nativo Oficial da AKA VNI -->
+                <svg viewBox="0 0 300 300" class="absolute inset-0 w-full h-full select-none pointer-events-none">
+                  <defs>
+                    <path id="crest-path-top" d="M 52,150 A 98,98 0 0,1 248,150" fill="none" />
+                    <path id="crest-path-bottom" d="M 58,150 A 92,92 0 0,0 242,150" fill="none" />
+                    <radialGradient id="sun-glow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#DC2626" />
+                      <stop offset="100%" stop-color="#991B1B" />
+                    </radialGradient>
+                  </defs>
+                  <circle cx="150" cy="150" r="146" fill="#08080a" stroke="#2a2a32" stroke-width="3" />
+                  <circle cx="150" cy="150" r="95" fill="url(#sun-glow)" stroke="#6b0e11" stroke-width="1.5" />
+                  <path d="M 58,178 Q 150,162 242,174" stroke="#08080a" stroke-width="5" fill="none" />
+                  <path d="M 60,206 Q 150,192 240,200" stroke="#08080a" stroke-width="5" fill="none" />
+                  <polygon points="76,104 228,106 216,119 88,119" fill="#ffffff" />
+                  <polygon points="86,134 236,134 225,147 97,147" fill="#ffffff" />
+                  <rect x="135" y="108" width="20" height="126" fill="#ffffff" />
+                  <rect x="182" y="122" width="17" height="48" fill="#ffffff" />
+                  <text font-family="'Syne', 'Inter', sans-serif" font-size="28" font-weight="900" fill="#ffffff" letter-spacing="4.5">
+                    <textPath href="#crest-path-top" startOffset="50%" text-anchor="middle">AKA VNI</textPath>
+                  </text>
+                  <text font-family="'Brush Script MT', cursive" font-size="28" font-weight="bold" font-style="italic" fill="#ffffff" letter-spacing="2">
+                    <textPath href="#crest-path-bottom" startOffset="50%" text-anchor="middle">artes marciais</textPath>
+                  </text>
+                  <text x="28" y="142" font-family="'Noto Serif JP', serif" font-size="21" font-weight="900" fill="#ffffff" text-anchor="middle">集</text>
+                  <text x="28" y="170" font-family="'Noto Serif JP', serif" font-size="21" font-weight="900" fill="#ffffff" text-anchor="middle">中</text>
+                  <text x="272" y="142" font-family="'Noto Serif JP', serif" font-size="21" font-weight="900" fill="#ffffff" text-anchor="middle">専</text>
+                  <text x="272" y="170" font-family="'Noto Serif JP', serif" font-size="21" font-weight="900" fill="#ffffff" text-anchor="middle">念</text>
+                </svg>
+
+                <img id="emblem-img-direct" 
+                     src="aka.png" 
+                     alt="AKA VNI Brasão Oficial"
+                     class="relative z-10 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                     onerror="tratarErroLogo(this)" />
+
+                <div class="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-black/50 pointer-events-none z-20"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selo Superior -->
+      <div class="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-aka-card/90 border border-aka-red/50 shadow-aka-fire mt-2 mb-6 backdrop-blur-md">
+        <span class="w-2 h-2 rounded-full bg-aka-red animate-pulse"></span>
+        <span class="text-xs font-mono font-bold tracking-wider text-zinc-200 uppercase">ASSOCIAÇÃO AKA VNI • LONDRINA 2026</span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center w-full mb-10 text-left">
+        
+        <!-- Coluna de Texto e Chamadas -->
+        <div class="lg:col-span-7 flex flex-col items-start">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="hanko-stamp px-2 py-0.5 text-[10px]">州王者 CAMPEÃO ESTADUAL</span>
+            <span class="text-xs font-mono font-bold text-aka-gold uppercase tracking-wider">Karatê-Dō ES</span>
+          </div>
+
+          <h1 class="text-3xl sm:text-5xl md:text-6xl font-syne font-black tracking-tight text-white mb-4 leading-[1.06]">
+            Daniel Rumo ao Pódio do <br>
+            <span class="gold-sheen">Brasileiro de Karatê</span>
+          </h1>
+
+          <p class="text-base sm:text-lg text-zinc-300 font-normal leading-relaxed mb-6">
+            Aos <strong class="text-white font-bold">11 anos</strong>, o atleta Daniel representa com honra o dojô da <strong class="text-white font-bold">AKA VNI Artes Marciais</strong> em Venda Nova do Imigrante/ES. Ele garantiu a classificação para a final em Londrina/PR: <strong class="text-aka-gold">Final do Campeonato Brasileiro</strong> e <strong class="text-aka-gold">Campeonato Estudantil de Karatê</strong>.
+          </p>
+
+          <!-- Ações Rápidas -->
+          <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <button onclick="abrirPixDireto()" 
+              class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:brightness-110 text-white font-black text-sm tracking-wider shadow-lg active:scale-95 transition-all">
+              <i data-lucide="user-check" class="w-4 h-4 text-emerald-200"></i>
+              <span>PIX CONTA DANIEL</span>
+            </button>
+
+            <button onclick="abrirPixVakinha()" 
+              class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-aka-red via-red-700 to-aka-gold text-white font-black text-sm tracking-wider shadow-aka-fire hover:brightness-110 active:scale-95 transition-all">
+              <i data-lucide="zap" class="w-4 h-4 fill-current text-aka-gold"></i>
+              <span>PIX VAKINHA</span>
+            </button>
+
+            <a href="https://www.vakinha.com.br/6323222" target="_blank" rel="noopener noreferrer"
+              class="flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-aka-card hover:bg-zinc-800 border border-zinc-700/80 text-white font-bold text-sm transition-all active:scale-95">
+              <span>Apoiar no Vakinha</span>
+              <i data-lucide="arrow-up-right" class="w-4 h-4 text-zinc-400"></i>
+            </a>
+          </div>
+
+          <div class="mt-4 flex flex-wrap items-center gap-4 text-xs font-mono text-zinc-400">
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>Pix Conta: <strong class="text-zinc-200 font-bold">201.479.697-19</strong></span>
+            </span>
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="heart-handshake" class="w-3.5 h-3.5 text-aka-gold"></i>
+              <span>Vakinha: <strong class="text-zinc-200 font-bold">6323222@vakinha.com.br</strong></span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Coluna da Fotografia Real no Pódio -->
+        <div class="lg:col-span-5 w-full flex justify-center">
+          <div class="relative w-full max-w-md group cursor-pointer" onclick="abrirLightbox(0)">
+            <div class="absolute -inset-3 bg-gradient-to-tr from-aka-red/40 via-aka-gold/30 to-aka-red/20 rounded-3xl blur-2xl opacity-75 group-hover:opacity-100 transition-opacity"></div>
+            
+            <div class="photo-frame relative rounded-3xl bg-aka-surface p-2 shadow-2xl border border-aka-gold/30">
+              <div class="relative overflow-hidden rounded-2xl aspect-[4/3] bg-zinc-900 flex items-center justify-center">
+                <img id="img-hero-podio" 
+                     src="daniel-podio.jpg" 
+                     alt="Daniel com a bandeira da AKA VNI e medalha de Campeão Estadual"
+                     class="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                     onerror="tratarErroImagem(this, 0, 'daniel-podio');">
+
+                <!-- Badge Overlay na Foto -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-end p-4 text-white pointer-events-none">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-mono text-aka-gold font-bold flex items-center gap-1">
+                      <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> Ampliar
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="absolute -bottom-3 -right-3 px-3.5 py-1.5 rounded-xl bg-aka-obsidian border border-aka-gold/60 text-[10px] font-mono font-bold text-aka-gold tracking-wider shadow-xl flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              FOTO OFICIAL • VENDA NOVA DO IMIGRANTE
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 w-full max-w-4xl mb-6">
+        <div class="aka-bento-card p-4 sm:p-5 rounded-2xl text-left border border-white/5 relative overflow-hidden">
+          <div class="flex items-center justify-between text-zinc-400 mb-1">
+            <span class="text-[10px] font-mono uppercase tracking-wider">Modalidade</span>
+            <span class="font-jp text-aka-gold text-lg">武</span>
+          </div>
+          <div class="text-xl sm:text-2xl font-black text-white font-mono">Karatê-Dō</div>
+          <div class="text-[11px] text-zinc-400 font-mono">Kumite & Kata</div>
+        </div>
+
+        <div class="aka-bento-card p-4 sm:p-5 rounded-2xl text-left border border-white/5 relative overflow-hidden">
+          <div class="flex items-center justify-between text-zinc-400 mb-1">
+            <span class="text-[10px] font-mono uppercase tracking-wider">Dojô & Origem</span>
+            <span class="font-jp text-aka-red text-lg">館</span>
+          </div>
+          <div class="text-xl sm:text-2xl font-black text-white font-mono">AKA VNI</div>
+          <div class="text-[11px] text-zinc-400">Venda Nova do Imigrante</div>
+        </div>
+
+        <div class="aka-bento-card p-4 sm:p-5 rounded-2xl text-left border border-white/5 relative overflow-hidden">
+          <div class="flex items-center justify-between text-zinc-400 mb-1">
+            <span class="text-[10px] font-mono uppercase tracking-wider">Competições</span>
+            <span class="font-jp text-aka-gold text-lg">覇</span>
+          </div>
+          <div class="text-xl sm:text-2xl font-black text-white font-mono">2 Campeonatos</div>
+          <div class="text-[11px] text-zinc-400">Brasileiro + Estudantil</div>
+        </div>
+
+        <div class="aka-bento-card p-4 sm:p-5 rounded-2xl text-left border border-white/5 relative overflow-hidden">
+          <div class="flex items-center justify-between text-zinc-400 mb-1">
+            <span class="text-[10px] font-mono uppercase tracking-wider">Destino</span>
+            <span class="font-jp text-emerald-400 text-lg">場</span>
+          </div>
+          <div class="text-xl sm:text-2xl font-black text-white font-mono">Londrina</div>
+          <div class="text-[11px] text-zinc-400">Novembro / 2026</div>
+        </div>
+      </div>
+
+    </section>
+
+    <div class="w-full py-4 my-6 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border-y-2 border-zinc-800 relative overflow-hidden shadow-2xl">
+      <div class="max-w-6xl mx-auto px-4 flex flex-wrap items-center justify-around gap-4 text-xs sm:text-sm font-jp font-bold text-zinc-300">
+        <div class="flex items-center gap-2">
+          <span class="text-aka-red text-base font-black">集中 • SHŪCHŪ</span>
+          <span class="font-sans text-xs text-zinc-400 uppercase tracking-wider">(Concentração e foco no tatame)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-aka-gold text-base font-black">専念 • SENNEN</span>
+          <span class="font-sans text-xs text-zinc-400 uppercase tracking-wider">(Dedicação incondicional aos treinos)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-aka-red text-base font-black">押忍 • OSS</span>
+          <span class="font-sans text-xs text-zinc-400 uppercase tracking-wider">(Respeito, perseverança e honra)</span>
+        </div>
+      </div>
+    </div>
+
+    <section id="galeria-tatame" class="py-16 px-4 sm:px-6 relative">
+      <div class="max-w-6xl mx-auto">
+        
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+          <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-aka-red/10 border border-aka-red/30 text-aka-red text-xs font-mono font-bold uppercase tracking-widest mb-2">
+              <span class="font-jp">写</span> Galeria Oficial CBK & Seletiva Nacional
+            </div>
+            <h2 class="text-3xl sm:text-5xl font-syne font-extrabold text-white">
+              Precisão, Kime e Disciplina no Tatame
+            </h2>
+          </div>
+          <p class="text-zinc-400 text-xs sm:text-sm max-w-md font-sans">
+            Registros de Daniel competindo na Seletiva Nacional e Classificatória do Campeonato Brasileiro de Karatê (CBK).
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          
+          <!-- Foto 1: Salto Monumental no Ar (Kiai) - Destaque Amplo -->
+          <div class="lg:col-span-5 photo-frame group cursor-pointer min-h-[480px] sm:min-h-[580px] lg:min-h-[860px] h-full flex flex-col justify-end relative" onclick="abrirLightbox(3)">
+            <img id="img-salto"
+                 src="daniel-salto.jpg" 
+                 alt="Daniel executando salto espetacular de Kata no ar com Kiai" 
+                 class="absolute inset-0 w-full h-full object-cover object-center"
+                 onerror="tratarErroImagem(this, 3, 'daniel-salto');">
+            <div class="relative z-10 bg-gradient-to-t from-black/95 via-black/40 to-transparent p-6 sm:p-8 pointer-events-none">
+              <div class="flex items-center gap-2 mb-2">
+              </div>
+            </div>
+          </div>
+
+          <!-- Fotos 2, 3, 4 e 5: Grade com Altura Generosa para Não Cortar a Postura -->
+          <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-5">
+            
+            <!-- Foto 2: Faixa Vermelha Postura Zenkutsu Dachi -->
+            <div class="photo-frame group cursor-pointer min-h-[380px] sm:min-h-[420px] flex flex-col justify-end relative" onclick="abrirLightbox(4)">
+              <img id="img-kata-vermelho-1"
+                   src="daniel-kata-vermelho-1.jpg" 
+                   alt="Daniel com faixa vermelha postura de concentração zenkutsu-dachi" 
+                   class="absolute inset-0 w-full h-full object-cover object-center"
+                   onerror="tratarErroImagem(this, 4, 'daniel-kata-vermelho-1');">
+              <div class="relative z-10 bg-gradient-to-t from-black/90 via-black/35 to-transparent p-5 pointer-events-none">
+              </div>
+            </div>
+
+            <!-- Foto 3: Faixa Vermelha Golpe Tsuki com Kime -->
+            <div class="photo-frame group cursor-pointer min-h-[380px] sm:min-h-[420px] flex flex-col justify-end relative" onclick="abrirLightbox(5)">
+              <img id="img-kata-vermelho-2"
+                   src="daniel-kata-vermelho-2.jpg" 
+                   alt="Daniel desferindo soco firme com kime no tatame" 
+                   class="absolute inset-0 w-full h-full object-cover object-center"
+                   onerror="tratarErroImagem(this, 5, 'daniel-kata-vermelho-2');">
+              <div class="relative z-10 bg-gradient-to-t from-black/90 via-black/35 to-transparent p-5 pointer-events-none">
+              </div>
+            </div>
+
+            <!-- Foto 4: Faixa Azul Defesa Punhos Cruzados -->
+            <div class="photo-frame group cursor-pointer min-h-[380px] sm:min-h-[420px] flex flex-col justify-end relative" onclick="abrirLightbox(1)">
+              <img id="img-kata-azul-1"
+                   src="daniel-kata-azul-1.jpg" 
+                   alt="Daniel com faixa azul postura de guarda e concentração" 
+                   class="absolute inset-0 w-full h-full object-cover object-center"
+                   onerror="tratarErroImagem(this, 1, 'daniel-kata-azul-1');">
+              <div class="relative z-10 bg-gradient-to-t from-black/90 via-black/35 to-transparent p-5 pointer-events-none">
+              </div>
+            </div>
+
+            <!-- Foto 5: Faixa Azul Golpe de Mão Aberta Nukite/Shuto -->
+            <div class="photo-frame group cursor-pointer min-h-[380px] sm:min-h-[420px] flex flex-col justify-end relative" onclick="abrirLightbox(2)">
+              <img id="img-kata-azul-2"
+                   src="daniel-kata-azul-2.jpg" 
+                   alt="Daniel aplicando golpe técnico de mão aberta" 
+                   class="absolute inset-0 w-full h-full object-cover object-center"
+                   onerror="tratarErroImagem(this, 2, 'daniel-kata-azul-2');">
+              <div class="relative z-10 bg-gradient-to-t from-black/90 via-black/35 to-transparent p-5 pointer-events-none">
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <section id="bushido" class="py-16 px-4 sm:px-6 relative">
+      <div class="max-w-6xl mx-auto">
+        
+        <div class="text-center max-w-2xl mx-auto mb-12">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-aka-red/10 border border-aka-red/30 text-aka-red text-xs font-mono font-bold uppercase tracking-widest mb-3">
+            <span class="font-jp">武士道</span> Dedicação & Foco
+          </div>
+          <h2 class="text-3xl sm:text-5xl font-syne font-extrabold text-white">
+            A Trajetória do Pequeno Guerreiro
+          </h2>
+          <p class="text-zinc-400 text-sm sm:text-base mt-2">
+            Conheça o compromisso de Daniel no dojô da AKA VNI que resultou na conquista das vagas nacionais.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <div class="aka-bento-card p-6 sm:p-8 rounded-3xl md:col-span-2 relative overflow-hidden group">
+            <div class="flex items-center justify-between mb-6">
+              <div class="w-12 h-12 rounded-2xl bg-aka-red/20 border border-aka-red/30 text-aka-red flex items-center justify-center font-bold text-xl">
+                🥋
+              </div>
+              <span class="hanko-stamp px-2.5 py-1 text-xs">州王者 CAMPEÃO ESTADUAL</span>
+            </div>
+
+            <h3 class="text-2xl sm:text-3xl font-syne font-bold text-white mb-3">
+              Formado no Tatame da AKA VNI em Venda Nova do Imigrante
+            </h3>
+            <p class="text-zinc-300 text-sm leading-relaxed mb-6">
+              Sob a instrução e valores da <strong>AKA VNI - artes marciais</strong>, Daniel aprendeu que o Karatê é um caminho pautado por <strong>Concentração (集中)</strong> e <strong>Dedicação (専念)</strong>. Os resultados renderam títulos de campeão e vice no Espírito Santo e duas vagas diretas para o Campeonato em Londrina.
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+              <div class="p-3.5 rounded-xl bg-aka-obsidian/90 border border-white/5 flex items-center gap-3">
+                <span class="font-jp text-aka-gold text-base">壱</span>
+                <span class="text-zinc-200">Final do Campeonato Brasileiro de Karatê (CBK)</span>
+              </div>
+              <div class="p-3.5 rounded-xl bg-aka-obsidian/90 border border-white/5 flex items-center gap-3">
+                <span class="font-jp text-aka-gold text-base">弐</span>
+                <span class="text-zinc-200">Campeonato Estudantil de Karatê</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="aka-bento-card p-6 sm:p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between">
+            <div>
+              <div class="w-12 h-12 rounded-2xl bg-aka-gold/15 border border-aka-gold/30 text-aka-gold flex items-center justify-center mb-6 text-xl">
+                📍
+              </div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-jp text-aka-red text-sm font-bold">郷土</span>
+                <span class="text-xs font-mono uppercase tracking-wider text-zinc-400">Origem</span>
+              </div>
+              <h3 class="text-xl font-syne font-bold text-white mb-2">
+                Venda Nova do Imigrante - ES
+              </h3>
+              <p class="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+                Das montanhas capixabas para o tatame nacional em Londrina/PR. Daniel carrega o orgulho de sua cidade e dos colegas de dojô.
+              </p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-xs text-zinc-500 font-mono">
+              <span>Espírito Santo</span>
+              <span class="text-aka-red font-bold">→ Londrina / PR</span>
+            </div>
+          </div>
+
+          <div class="aka-bento-card p-6 sm:p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between md:col-span-3">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              <div class="md:col-span-2">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="font-jp text-aka-red text-sm font-bold">期限</span>
+                  <span class="text-xs font-mono uppercase tracking-wider text-zinc-400">Logística & Deslocamento</span>
+                </div>
+                <h3 class="text-2xl font-syne font-bold text-white mb-2">
+                  Londrina / PR • Novembro de 2026
+                </h3>
+                <p class="text-zinc-300 text-sm leading-relaxed">
+                  As passagens aéreas e a formalização das inscrições na Confederação Brasileira de Karatê (CBK) necessitam de antecipação. Cada contribuição viabiliza passagem, hospedagem segura, alimentação adequada e taxas de competição.
+                </p>
+              </div>
+              <div class="flex justify-end">
+                <button onclick="abrirPixDireto()" class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:brightness-110 text-white font-black text-sm tracking-wider shadow-lg active:scale-95 transition-all w-full md:w-auto text-center">
+                  CONTRIBUIR AGORA
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <section id="terminal-pix" class="py-20 px-4 sm:px-6 relative">
+      <div class="max-w-5xl mx-auto">
+        
+        <div class="aka-bento-card rounded-3xl p-6 sm:p-12 border-2 border-aka-red/50 shadow-aka-fire relative overflow-hidden">
+          
+          <div class="text-center max-w-xl mx-auto mb-8">
+            <div class="hanko-stamp px-3 py-1 text-xs mb-3">寄付 APOIO VIA PIX</div>
+            <h2 class="text-3xl sm:text-5xl font-syne font-extrabold text-white">
+              Faça Parte da Vitória de Daniel
+            </h2>
+            <p class="text-zinc-300 text-sm mt-2">
+              Você pode doar diretamente para a conta do atleta ou pela Vakinha Online oficial. Escolha a melhor opção abaixo:
+            </p>
+          </div>
+
+          <!-- Abas de Chave Pix -->
+          <div class="flex justify-center mb-8">
+            <div class="inline-flex p-1.5 rounded-2xl bg-aka-obsidian border border-white/10 shadow-inner max-w-md w-full">
+              <button id="tab-pix-direto" onclick="selecionarAbaPix('direto')" 
+                class="flex-1 py-3 px-4 rounded-xl font-syne font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-lg">
+                <i data-lucide="user" class="w-4 h-4"></i>
+                <span>Pix Conta Daniel (CPF)</span>
+              </button>
+
+              <button id="tab-pix-vakinha" onclick="selecionarAbaPix('vakinha')" 
+                class="flex-1 py-3 px-4 rounded-xl font-syne font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all text-zinc-400 hover:text-white">
+                <i data-lucide="heart" class="w-4 h-4"></i>
+                <span>Pix Vakinha Online</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            
+            <!-- Box QR Code Dinâmico -->
+            <div class="flex flex-col items-center justify-center p-6 bg-aka-obsidian/95 rounded-2xl border border-white/10 shadow-inner">
+              <div class="p-4 bg-white rounded-2xl shadow-2xl mb-4 relative" id="qrcode-main">
+                <!-- Preenchido via QRCode.js -->
+              </div>
+              <span id="qrcode-caption" class="text-xs font-mono text-zinc-400 text-center flex items-center gap-1.5">
+                <i data-lucide="scan" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <span>Aponte o app do banco para pagar o Pix da conta do Daniel</span>
+              </span>
+            </div>
+
+            <!-- Box Chaves e Informações -->
+            <div class="flex flex-col justify-center space-y-5">
+              
+              <!-- PAINEL PIX DIRETO CONTA DANIEL (CPF) -->
+              <div id="painel-pix-direto" class="space-y-4">
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="text-xs font-mono uppercase tracking-wider text-emerald-400 font-bold flex items-center gap-1.5">
+                      <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                      <span>Chave Pix Direta (CPF do Atleta)</span>
+                    </label>
+                    <span class="text-[10px] font-mono bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30 text-emerald-300">
+                      Sem Taxas
+                    </span>
+                  </div>
+
+                  <div class="p-3.5 rounded-xl bg-aka-obsidian border border-emerald-500/60 flex items-center justify-between gap-3 shadow-inner">
+                    <span class="font-mono text-sm sm:text-base font-bold text-emerald-300 select-all truncate">
+                      201.479.697-19
+                    </span>
+                    <button onclick="copiarPixCPF()" class="flex-shrink-0 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-700 hover:brightness-110 text-white font-black text-xs flex items-center gap-1.5 transition-transform active:scale-95 shadow-lg">
+                      <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                      <span id="btn-copy-label-direto">COPIAR PIX</span>
+                    </button>
+                  </div>
+                  
+                  <div class="mt-1.5 flex justify-end">
+                    <button onclick="copiarPixCPFSemFormatacao()" class="text-[11px] font-mono text-zinc-400 hover:text-emerald-300 underline transition-colors flex items-center gap-1">
+                      <i data-lucide="hash" class="w-3 h-3"></i>
+                      <span>Copiar somente números (20147969719)</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="p-4 rounded-xl bg-aka-card/90 border border-white/5 space-y-2 text-xs text-zinc-400 font-mono">
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="user" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+                    <span>Beneficiário: <strong class="text-zinc-200">Daniel Lorenzoni (Conta do Atleta)</strong></span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="map-pin" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+                    <span>Origem: <strong class="text-zinc-200">Venda Nova do Imigrante - ES</strong></span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="zap" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+                    <span>O valor cai imediatamente sem dedução de taxas</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PAINEL PIX VAKINHA ONLINE -->
+              <div id="painel-pix-vakinha" class="space-y-4 hidden">
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="text-xs font-mono uppercase tracking-wider text-aka-gold font-bold flex items-center gap-1.5">
+                      <i data-lucide="heart" class="w-3.5 h-3.5 text-aka-red"></i>
+                      <span>Chave Pix Oficial da Vakinha (E-mail)</span>
+                    </label>
+                    <span class="text-[10px] font-mono bg-red-950/60 px-2 py-0.5 rounded border border-red-500/30 text-red-300">
+                      Campanha Oficial
+                    </span>
+                  </div>
+
+                  <div class="p-3.5 rounded-xl bg-aka-obsidian border border-aka-red/60 flex items-center justify-between gap-3 shadow-inner">
+                    <span class="font-mono text-sm sm:text-base font-bold text-aka-gold select-all truncate">
+                      6323222@vakinha.com.br
+                    </span>
+                    <button onclick="copiarPixVakinha()" class="flex-shrink-0 px-4 py-2.5 rounded-lg bg-gradient-to-r from-aka-red to-red-700 hover:from-red-600 hover:to-aka-red text-white font-black text-xs flex items-center gap-1.5 transition-transform active:scale-95 shadow-lg">
+                      <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                      <span id="btn-copy-label-vakinha">COPIAR PIX</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="p-4 rounded-xl bg-aka-card/90 border border-white/5 space-y-2 text-xs text-zinc-400 font-mono">
+                  <div class="flex items-center gap-2">
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-aka-gold shrink-0"></i>
+                    <span>ID da Vaquinha: <strong class="text-zinc-200">#6323222</strong></span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-aka-gold shrink-0"></i>
+                    <span>O valor entra diretamente no saldo auditado da Vakinha</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Ações Complementares -->
+              <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                <a href="https://www.vakinha.com.br/6323222" target="_blank" rel="noopener noreferrer"
+                  class="flex-1 py-3.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-xs text-center flex items-center justify-center gap-2 transition-all">
+                  <i data-lucide="credit-card" class="w-4 h-4"></i>
+                  <span>Cartão no Vakinha</span>
+                </a>
+
+                <button id="btn-share-wpp" onclick="compartilharWhatsApp()"
+                  class="flex-1 py-3.5 px-4 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-400 font-bold text-xs flex items-center justify-center gap-2 transition-all">
+                  <i data-lucide="send" class="w-4 h-4"></i>
+                  <span id="btn-share-wpp-label">Compartilhar Pix Conta no WhatsApp</span>
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <div id="lightbox-modal" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-2xl hidden items-center justify-center p-3 sm:p-6 select-none" onclick="fecharLightboxSeForFora(event)">
+    
+    <button onclick="fecharLightbox()" class="absolute top-4 right-4 z-20 w-11 h-11 rounded-full bg-white/10 hover:bg-aka-red text-white flex items-center justify-center transition-colors shadow-lg">
+      <i data-lucide="x" class="w-6 h-6"></i>
+    </button>
+
+    <button onclick="mudarFotoLightbox(-1, event)" class="absolute left-3 sm:left-6 z-20 w-11 h-11 rounded-full bg-white/10 hover:bg-aka-gold hover:text-black text-white flex items-center justify-center transition-all shadow-lg">
+      <i data-lucide="chevron-left" class="w-6 h-6"></i>
+    </button>
+
+    <button onclick="mudarFotoLightbox(1, event)" class="absolute right-3 sm:right-6 z-20 w-11 h-11 rounded-full bg-white/10 hover:bg-aka-gold hover:text-black text-white flex items-center justify-center transition-all shadow-lg">
+      <i data-lucide="chevron-right" class="w-6 h-6"></i>
+    </button>
+
+    <div class="max-w-4xl w-full flex flex-col items-center max-h-[92vh] overflow-y-auto">
+      <div class="relative w-full flex items-center justify-center mb-3">
+        <img id="lightbox-img" src="" alt="Ampliação do Kata" class="max-h-[70vh] sm:max-h-[74vh] w-auto max-w-full object-contain rounded-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.9)]">
+      </div>
+      <div class="text-center max-w-xl px-2">
+        <span id="lightbox-badge" class="px-3 py-1 rounded-full bg-aka-red text-[11px] font-mono font-bold text-white uppercase tracking-wider inline-block"></span>
+        <h3 id="lightbox-title" class="font-syne font-bold text-lg sm:text-xl text-white mt-2"></h3>
+        <p id="lightbox-desc" class="text-xs sm:text-sm text-zinc-400 mt-1 leading-relaxed"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra Fixa Mobile -->
+  <div class="fixed bottom-0 left-0 right-0 z-40 p-3 bg-aka-obsidian/95 backdrop-blur-xl border-t border-white/10 sm:hidden flex items-center justify-between gap-2">
+    <div class="flex-1 min-w-0">
+      <div class="text-[10px] text-zinc-400 uppercase font-mono truncate">Daniel no Brasileiro • AKA VNI</div>
+      <div class="text-xs font-bold text-aka-gold truncate">Escolha como apoiar:</div>
+    </div>
+    <div class="flex items-center gap-1.5 shrink-0">
+      <button onclick="copiarPixCPF()" class="px-3 py-2 rounded-xl bg-emerald-600 text-white font-black text-xs flex items-center gap-1 shadow-md active:scale-95 transition-transform">
+        <i data-lucide="user" class="w-3.5 h-3.5"></i>
+        <span>Pix CPF</span>
+      </button>
+      <button onclick="copiarPixVakinha()" class="px-3 py-2 rounded-xl bg-gradient-to-r from-aka-red to-red-600 text-white font-black text-xs flex items-center gap-1 shadow-aka-fire active:scale-95 transition-transform">
+        <i data-lucide="zap" class="w-3.5 h-3.5 text-aka-gold fill-current"></i>
+        <span>Vakinha</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notificação -->
+  <div id="toast-pix" class="fixed top-6 right-6 z-50 transform -translate-y-24 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-aka-card border-2 border-aka-red text-white shadow-aka-fire">
+    <div id="toast-icon" class="w-7 h-7 rounded-full bg-aka-red text-white flex items-center justify-center font-bold text-xs">✓</div>
+    <div>
+      <p id="toast-msg-title" class="font-bold text-xs">Chave Pix copiada com sucesso!</p>
+      <p id="toast-msg-key" class="text-[11px] text-aka-gold font-mono">201.479.697-19</p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="relative z-10 border-t border-zinc-800/80 py-16 px-4 sm:px-6 bg-aka-obsidian">
+    <div class="max-w-6xl mx-auto space-y-12">
+
+      <!-- BLOCO DE PATROCÍNIO OFICIAL COM EFEITO 3D TILT IDÊNTICO AO TOPO -->
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-zinc-950 via-[#0a111a] to-zinc-950 border border-cyan-500/30 p-6 sm:p-8 shadow-[0_0_40px_-10px_rgba(6,182,212,0.2)]">
+        <div class="absolute -right-16 -top-16 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -left-16 -bottom-16 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+          <!-- Textos Institucionais do Apoio -->
+          <div class="text-center md:text-left space-y-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 text-[11px] font-mono font-bold tracking-widest uppercase">
+              <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+              Patrocínio Oficial • Apoio ao Esporte
+            </div>
+            <h3 class="text-2xl sm:text-3xl font-syne font-black text-white tracking-wide">
+              RB INFORMÁTICA
+            </h3>
+            <p class="text-xs sm:text-sm font-mono text-cyan-200/80 uppercase tracking-wider font-semibold">
+              Montagem &amp; Manutenção de Computadores
+            </p>
+            <p class="text-xs text-zinc-400 max-w-lg font-sans pt-1">
+              Apoiando o atleta Daniel Lorenzoni e a Associação AKA VNI na busca pelo título nacional em Londrina/PR. Tecnologia e disciplina, lado a lado pelo esporte capixaba!
+            </p>
+          </div>
+
+          <!-- LOGO OFICIAL 3D TILT ORIGINAL: RB INFORMÁTICA (rbinformatica.jpeg) -->
+          <div class="sponsor-3d-wrapper shrink-0 select-none cursor-pointer" id="sponsor-container" onclick="tocarTaiko()">
+            <div class="relative group">
+              <!-- Aura Luminosa 3D em Ki Azul Tecnológico -->
+              <div class="absolute -inset-4 rounded-3xl bg-gradient-to-r from-cyan-500 via-blue-600 to-teal-400 opacity-40 blur-2xl group-hover:opacity-85 transition-opacity duration-700 animate-ki-breathe pointer-events-none"></div>
+              
+              <!-- Card 3D com Perspectiva e Borda Iluminada -->
+              <div class="sponsor-3d-card relative w-64 sm:w-80 h-36 sm:h-40 rounded-2xl bg-gradient-to-b from-cyan-400/40 via-zinc-900 to-blue-900/60 p-2 shadow-2xl border border-cyan-400/50">
+                <div class="w-full h-full rounded-xl bg-gradient-to-tr from-zinc-950 via-[#0a111a] to-zinc-900 shadow-inner flex items-center justify-center border border-white/10 overflow-hidden relative">
+                  
+                  <!-- Imagem Original rbinformatica.jpeg (com fallback inteligente) -->
+                  <img id="img-patrocinador-rb"
+                       src="rbinformatica.jpeg"
+                       alt="RB Informática - Montagem & Manutenção"
+                       class="relative z-10 w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
+                       onerror="tratarErroPatrocinador(this)">
+
+                  <div class="absolute inset-0 bg-gradient-to-b from-white/15 via-transparent to-cyan-950/40 pointer-events-none z-20"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-2 text-center">
+              <span class="inline-block px-2.5 py-0.5 rounded-full bg-zinc-900 border border-cyan-500/50 text-[9px] font-mono font-bold text-cyan-300 tracking-wider uppercase whitespace-nowrap shadow">
+                EMPRESA PARCEIRA DO ATLETA
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left pt-4">
+        <div>
+          <div class="flex items-center justify-center md:justify-start space-x-3 mb-2">
+            <div class="w-8 h-8 rounded-full bg-aka-red/20 border border-aka-red/40 text-aka-red flex items-center justify-center font-jp font-black text-xs">
+              集
+            </div>
+            <span class="font-syne font-black text-white text-base">AKA VNI - artes marciais</span>
+            <span class="hanko-stamp px-1.5 py-0.5 text-[8px]">押忍</span>
+          </div>
+          <p class="text-xs text-zinc-500 max-w-md font-sans">
+            Campanha de arrecadação para viabilizar a participação de Daniel Lorenzoni na Final do Campeonato Brasileiro e Campeonato Estudantil de Karatê em Londrina/PR.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-4 text-xs font-mono font-semibold text-zinc-400">
+          <a href="https://www.vakinha.com.br/6323222" target="_blank" class="hover:text-aka-gold transition-colors">Vakinha #6323222</a>
+          <span>•</span>
+          <button onclick="copiarPixCPF()" class="hover:text-emerald-400 transition-colors">Pix Conta Daniel</button>
+          <span>•</span>
+          <button onclick="copiarPixVakinha()" class="hover:text-aka-red transition-colors">Pix Vakinha</button>
+          <span>•</span>
+          <button onclick="compartilharWhatsApp()" class="hover:text-emerald-400 transition-colors">WhatsApp</button>
+        </div>
+      </div>
+
+      <!-- CRÉDITO DE PRODUÇÃO DA PÁGINA (RB INFORMÁTICA) -->
+      <div class="pt-6 border-t border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-zinc-500 text-center sm:text-left">
+        <div class="flex items-center justify-center sm:justify-start gap-2">
+          <i data-lucide="code-2" class="w-4 h-4 text-cyan-400"></i>
+          <span>
+            Página produzida por <strong class="text-cyan-300 font-bold tracking-wide">RB Informática</strong>
+          </span>
+        </div>
+        <div class="text-[11px] text-zinc-600">
+          Montagem &amp; Manutenção de Computadores • Apoio ao Esporte Capixaba
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <script>
+    // Tratamento de fallback para a logo oficial 3D do patrocinador RB Informática
+    function tratarErroPatrocinador(imgEl) {
+      if (!imgEl) return;
+      if (imgEl.src && imgEl.src.endsWith('rbinformatica.jpeg')) {
+        imgEl.src = 'rbinformatica.jpg';
+        return;
+      }
+      if (imgEl.src && (imgEl.src.endsWith('.jpg') || imgEl.src.endsWith('.jpeg')) && !imgEl.src.includes('16.50.20')) {
+        imgEl.src = 'WhatsApp Image 2026-08-25 at 16.50.20.jpg';
+        return;
+      }
+      if (imgEl.src && !imgEl.src.includes('rb-informatica.png')) {
+        imgEl.src = 'rb-informatica.png';
+        return;
+      }
+      // Fallback SVG vetorial com design tecnológico 3D
+      imgEl.onerror = null;
+      imgEl.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 240' width='600' height='240'><rect width='600' height='240' fill='#080c14'/><g transform='translate(50, 40)'><polygon points='70,5 130,40 130,110 70,145 10,110 10,40' fill='#111827' stroke='#06b6d4' stroke-width='4'/><rect x='45' y='50' width='50' height='50' rx='8' fill='#0f172a' stroke='#38bdf8' stroke-width='3'/><circle cx='70' cy='75' r='12' fill='#0284c7'/><line x1='70' y1='50' x2='70' y2='20' stroke='#38bdf8' stroke-width='3'/><line x1='70' y1='100' x2='70' y2='130' stroke='#38bdf8' stroke-width='3'/><line x1='45' y1='75' x2='20' y2='75' stroke='#38bdf8' stroke-width='3'/><line x1='95' y1='75' x2='120' y2='75' stroke='#38bdf8' stroke-width='3'/></g><text x='230' y='95' font-family='sans-serif' font-size='50' font-weight='900' fill='#e2e8f0' letter-spacing='3'>RB</text><text x='230' y='145' font-family='sans-serif' font-size='38' font-weight='900' fill='#38bdf8' letter-spacing='2'>INFORMÁTICA</text><text x='232' y='180' font-family='sans-serif' font-size='15' font-weight='700' fill='#94a3b8' letter-spacing='4'>MONTAGEM &amp; MANUTENÇÃO</text></svg>");
+    }
+
+    // Catálogo de Fallbacks SVG Ricos
+    const visualFallbacks = [
+      "data:image/svg+xml;charset=utf-8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'><rect width='800' height='600' fill='#111118'/><circle cx='400' cy='280' r='160' fill='#c41e24' opacity='0.2'/><rect x='160' y='160' width='480' height='260' rx='24' fill='#171722' stroke='#d4af37' stroke-width='2'/><text x='400' y='220' font-family='sans-serif' font-size='22' font-weight='900' fill='#ffffff' text-anchor='middle'>DANIEL • PÓDIO ESTADUAL FCK</text><text x='400' y='260' font-family='sans-serif' font-size='15' font-weight='bold' fill='#fbbf24' text-anchor='middle'>Campeão Capixaba de Karatê</text><text x='400' y='300' font-family='monospace' font-size='13' fill='#a1a1aa' text-anchor='middle'>Salvar arquivo como: daniel-podio.jpg</text><circle cx='400' cy='460' r='28' fill='#fbbf24'/><text x='400' y='468' font-family='sans-serif' font-size='20' font-weight='bold' fill='#000000' text-anchor='middle'>🥇</text></svg>"),
+      "data:image/svg+xml;charset=utf-8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800' viewBox='0 0 600 800'><rect width='600' height='800' fill='#0a101d'/><circle cx='300' cy='380' r='180' fill='#2563eb' opacity='0.2'/><rect x='100' y='260' width='400' height='260' rx='20' fill='#131c2e' stroke='#3b82f6' stroke-width='2'/><text x='300' y='320' font-family='sans-serif' font-size='22' font-weight='900' fill='#ffffff' text-anchor='middle'>KATA • FAIXA AZUL (AO)</text><text x='300' y='360' font-family='sans-serif' font-size='15' fill='#60a5fa' text-anchor='middle'>Postura Kiba-Dachi &amp; Guarda</text><text x='300' y='410' font-family='monospace' font-size='12' fill='#94a3b8' text-anchor='middle'>Salvar: daniel-kata-azul-1.jpg</text></svg>"),
+      "data:image/svg+xml;charset=utf-8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800' viewBox='0 0 600 800'><rect width='600' height='800' fill='#0a101d'/><circle cx='300' cy='380' r='180' fill='#2563eb' opacity='0.2'/><rect x='100' y='260' width='400' height='260' rx='20' fill='#131c2e' stroke='#3b82f6' stroke-width='2'/><text x='300' y='320' font-family='sans-serif' font-size='22' font-weight='900' fill='#ffffff' text-anchor='middle'>SHUTO-UKE / NUKITE</text><text x='300' y='360' font-family='sans-serif' font-size='15' fill='#60a5fa' text-anchor='middle'>Golpe Técnico de Mão Aberta</text><text x='300' y='410' font-family='monospace' font-size='12' fill='#94a3b8' text-anchor='middle'>Salvar: daniel-kata-azul-2.jpg</text></svg>"),
+      "data:image/svg+xml;charset=utf-8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800' viewBox='0 0 600 800'><rect width='600' height='800' fill='#1c0a0c'/><circle cx='300' cy='380' r='200' fill='#dc2626' opacity='0.25'/><rect x='80' y='240' width='440' height='300' rx='24' fill='#220f12' stroke='#ef4444' stroke-width='2'/><text x='300' y='310' font-family='sans-serif' font-size='24' font-weight='900' fill='#ffffff' text-anchor='middle'>SALTO NO AR COM KIAI</text><text x='300' y='350' font-family='sans-serif' font-size='16' font-weight='bold' fill='#f87171' text-anchor='middle'>Potência &amp; Explosão de Kata</text><text x='300' y='395' font-family='monospace' font-size='13' fill='#fbbf24' text-anchor='middle'>Salvar: daniel-salto.jpg</text></svg>"),
+      "data:image/svg+xml;charset=utf-8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800' viewBox='0 0 600 800'><rect width='600' height='800' fill='#190a0d'/><circle cx='300' cy='380' r='180' fill='#dc2626' opacity='0.2'/><rect x='100' y='260' width='400' height='260' rx='20' fill='#220f13' stroke='#ef4444' stroke-width='2'/><text x='300' y='320' font-family='sans-serif' font-size='22' font-weight='900' fill='#ffffff' text-anchor='middle'>ZENKUTSU-DACHI</text><text x='300' y='360' font-family='sans-serif' font-size='15' fill='#fca5a5' text-anchor='middle'>Faixa Vermelha (Aka) • Base Firme</text><text x='300' y='410' font-family='monospace' font-size='12' fill='#a1a1aa' text-anchor='middle'>Salvar: daniel-kata-vermelho-1.jpg</text></svg>"),
+      "data:image/svg+xml;charset=utf-8," + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800' viewBox='0 0 600 800'><rect width='600' height='800' fill='#190a0d'/><circle cx='300' cy='380' r='180' fill='#dc2626' opacity='0.2'/><rect x='100' y='260' width='400' height='260' rx='20' fill='#220f13' stroke='#ef4444' stroke-width='2'/><text x='300' y='320' font-family='sans-serif' font-size='22' font-weight='900' fill='#ffffff' text-anchor='middle'>KIME &amp; FORÇA (TSUKI)</text><text x='300' y='360' font-family='sans-serif' font-size='15' fill='#fca5a5' text-anchor='middle'>Finalização com Puxada de Braço</text><text x='300' y='410' font-family='monospace' font-size='12' fill='#fbbf24' text-anchor='middle'>Salvar: daniel-kata-vermelho-2.jpg</text></svg>")
+    ];
+
+    // Catálogo Único de Fotos
+    const galeriaFotos = [
+      {
+        domId: "img-hero-podio",
+        src: "daniel-podio.jpg",
+        baseName: "daniel-podio",
+        altRaw: "WhatsApp Image 2026-09-20 at 01.24.11.jpeg",
+        key: "aka_photo_0",
+        fallback: visualFallbacks[0], 
+      },
+      {
+        domId: "img-kata-azul-1",
+        src: "daniel-kata-azul-1.jpg",
+        baseName: "daniel-kata-azul-1",
+        altRaw: "psfotoesportiva_brasileiroeseletivanacional3_mt_03023.jpg.jpg",
+        key: "aka_photo_1",
+        fallback: visualFallbacks[1],
+      },
+      {
+        domId: "img-kata-azul-2",
+        src: "daniel-kata-azul-2.jpg",
+        baseName: "daniel-kata-azul-2",
+        altRaw: "psfotoesportiva_brasileiroeseletivanacional3_mt_03024.jpg.jpg",
+        key: "aka_photo_2",
+        fallback: visualFallbacks[2],
+      },
+      {
+        domId: "img-salto",
+        src: "daniel-salto.jpg",
+        baseName: "daniel-salto",
+        altRaw: "psfotoesportiva_brasileiroeseletivanacional3_mt_03029.jpg.jpg",
+        key: "aka_photo_3",
+        fallback: visualFallbacks[3],
+      },
+      {
+        domId: "img-kata-vermelho-1",
+        src: "daniel-kata-vermelho-1.jpg",
+        baseName: "daniel-kata-vermelho-1",
+        altRaw: "psfotoesportiva_brasileiroeseletivanacional3_mt_03096.jpg.jpg",
+        key: "aka_photo_4",
+        fallback: visualFallbacks[4],
+      },
+      {
+        domId: "img-kata-vermelho-2",
+        src: "daniel-kata-vermelho-2.jpg",
+        baseName: "daniel-kata-vermelho-2",
+        altRaw: "psfotoesportiva_brasileiroeseletivanacional3_mt_03104.jpg.jpg",
+        key: "aka_photo_5",
+        fallback: visualFallbacks[5],
+      }
+    ];
+
+    let lightboxIndexAtual = 0;
+
+    function abrirLightbox(index) {
+      lightboxIndexAtual = index;
+      tocarTaiko();
+      const foto = galeriaFotos[index];
+      if (!foto) return;
+
+      const modal = document.getElementById('lightbox-modal');
+      const img = document.getElementById('lightbox-img');
+      const badge = document.getElementById('lightbox-badge');
+      const title = document.getElementById('lightbox-title');
+      const desc = document.getElementById('lightbox-desc');
+
+      let imagemAtiva = '';
+      const cardImg = document.getElementById(foto.domId);
+      if (cardImg && cardImg.src && !cardImg.src.includes('data:image/svg')) {
+        imagemAtiva = cardImg.currentSrc || cardImg.src;
+      }
+      
+      if (!imagemAtiva) {
+        try { imagemAtiva = localStorage.getItem(foto.key); } catch (e) {}
+      }
+      if (!imagemAtiva) {
+        imagemAtiva = foto.src;
+      }
+
+      if (img) {
+        img.onerror = function() {
+          tratarErroImagem(this, index, foto.baseName);
+        };
+        img.src = imagemAtiva;
+      }
+
+      if (badge) badge.innerText = foto.badge;
+      if (title) title.innerText = foto.title;
+      if (desc) desc.innerText = foto.desc;
+
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+      document.body.style.overflow = 'hidden';
+
+      if (window.lucide && typeof lucide.createIcons === 'function') {
+        lucide.createIcons();
+      }
+    }
+
+    function mudarFotoLightbox(direcao, event) {
+      if (event) event.stopPropagation();
+      let novoIndex = lightboxIndexAtual + direcao;
+      if (novoIndex < 0) novoIndex = galeriaFotos.length - 1;
+      if (novoIndex >= galeriaFotos.length) novoIndex = 0;
+      abrirLightbox(novoIndex);
+    }
+
+    function fecharLightbox() {
+      const modal = document.getElementById('lightbox-modal');
+      if (!modal) return;
+      modal.classList.remove('flex');
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    function fecharLightboxSeForFora(event) {
+      if (event.target.id === 'lightbox-modal') {
+        fecharLightbox();
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      const modal = document.getElementById('lightbox-modal');
+      if (!modal || modal.classList.contains('hidden')) return;
+      if (e.key === 'Escape') fecharLightbox();
+      if (e.key === 'ArrowLeft') mudarFotoLightbox(-1);
+      if (e.key === 'ArrowRight') mudarFotoLightbox(1);
+    });
+
+    function tratarErroLogo(imgEl) {
+      if (!imgEl) return;
+      if (imgEl.src && imgEl.src.endsWith('.png')) {
+        imgEl.src = 'aka.jpg';
+        return;
+      }
+      imgEl.style.display = 'none';
+    }
+
+    function tratarErroImagem(imgElement, index, baseName) {
+      if (!imgElement) return;
+
+      try {
+        const saved = localStorage.getItem('aka_photo_' + index);
+        if (saved) {
+          imgElement.onerror = null;
+          imgElement.src = saved;
+          return;
+        }
+      } catch (err) {}
+
+      if (imgElement.src && imgElement.src.endsWith('.jpg')) {
+        imgElement.src = baseName + '.jpeg';
+        return;
+      }
+
+      const foto = galeriaFotos[index];
+      if (imgElement.src && imgElement.src.endsWith('.jpeg') && foto && foto.altRaw && !imgElement.src.includes(encodeURIComponent(foto.altRaw))) {
+        imgElement.src = foto.altRaw;
+        return;
+      }
+
+      imgElement.onerror = null;
+      if (visualFallbacks[index]) {
+        imgElement.src = visualFallbacks[index];
+      }
+    }
+
+    function setPhotoFallback(imgElement, index) {
+      const foto = galeriaFotos[index];
+      if (foto) {
+        tratarErroImagem(imgElement, index, foto.baseName);
+      }
+    }
+
+    function restaurarFotosSalvas() {
+      try {
+        const savedLogo = localStorage.getItem('aka_emblem_logo');
+        if (savedLogo) {
+          const navImg = document.getElementById('nav-logo-img');
+          const emblemImg = document.getElementById('emblem-img-direct');
+          const bgImg = document.getElementById('bg-logo-img');
+          if (navImg) navImg.src = savedLogo;
+          if (emblemImg) emblemImg.src = savedLogo;
+          if (bgImg) bgImg.src = savedLogo;
+        }
+      } catch (e) {}
+
+      galeriaFotos.forEach((item, idx) => {
+        const el = document.getElementById(item.domId);
+        if (!el) return;
+        try {
+          const data = localStorage.getItem(item.key);
+          if (data) {
+            el.src = data;
+            item.src = data;
+            item.fallback = data;
+          }
+        } catch (e) {}
+      });
+    }
+
+    let audioCtxInstance = null;
+
+    function tocarTaiko() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!audioCtxInstance) audioCtxInstance = new AudioCtx();
+        if (audioCtxInstance.state === 'suspended') {
+          audioCtxInstance.resume();
+        }
+
+        const t = audioCtxInstance.currentTime;
+
+        const osc = audioCtxInstance.createOscillator();
+        const gain = audioCtxInstance.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(135, t);
+        osc.frequency.exponentialRampToValueAtTime(32, t + 0.38);
+
+        gain.gain.setValueAtTime(0.5, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+
+        osc.connect(gain);
+        gain.connect(audioCtxInstance.destination);
+        osc.start(t);
+        osc.stop(t + 0.45);
+
+        const gong = audioCtxInstance.createOscillator();
+        const gongGain = audioCtxInstance.createGain();
+        gong.type = 'triangle';
+        gong.frequency.setValueAtTime(460, t);
+        gong.frequency.exponentialRampToValueAtTime(380, t + 0.55);
+
+        gongGain.gain.setValueAtTime(0.08, t);
+        gongGain.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+
+        gong.connect(gongGain);
+        gongGain.connect(audioCtxInstance.destination);
+        gong.start(t);
+        gong.stop(t + 0.6);
+
+      } catch (err) {
+        console.warn("Audio Context indisponível:", err);
+      }
+    }
+
+    let scene, camera, renderer, kiParticles;
+    let mouse = { x: 0, y: 0 };
+
+    function initThreeAka() {
+      try {
+        const container = document.getElementById('webgl-bg');
+        if (!container || typeof THREE === 'undefined') return;
+
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 20;
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        const pCount = 280;
+        const pGeo = new THREE.BufferGeometry();
+        const pPos = new Float32Array(pCount * 3);
+        const pColors = new Float32Array(pCount * 3);
+
+        for (let i = 0; i < pCount * 3; i += 3) {
+          pPos[i] = (Math.random() - 0.5) * 50;
+          pPos[i + 1] = (Math.random() - 0.5) * 40;
+          pPos[i + 2] = (Math.random() - 0.5) * 30;
+
+          if (Math.random() > 0.4) {
+            pColors[i] = 0.77; pColors[i + 1] = 0.12; pColors[i + 2] = 0.14;
+          } else {
+            pColors[i] = 0.83; pColors[i + 1] = 0.68; pColors[i + 2] = 0.21;
+          }
+        }
+
+        pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+        pGeo.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
+
+        const pMat = new THREE.PointsMaterial({
+          size: 0.18,
+          vertexColors: true,
+          transparent: true,
+          opacity: 0.65,
+          blending: THREE.AdditiveBlending
+        });
+
+        kiParticles = new THREE.Points(pGeo, pMat);
+        scene.add(kiParticles);
+
+        window.addEventListener('resize', onAkaResize);
+        document.addEventListener('mousemove', onAkaMouseMove);
+        animateThreeAka();
+      } catch (err) {
+        console.warn("WebGL não suportado ou desabilitado:", err);
+      }
+    }
+
+    function onAkaMouseMove(e) {
+      mouse.x = (e.clientX / window.innerWidth - 0.5) * 0.6;
+      mouse.y = (e.clientY / window.innerHeight - 0.5) * 0.6;
+
+      document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+      document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+    }
+
+    function onAkaResize() {
+      if (!camera || !renderer) return;
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animateThreeAka() {
+      if (!renderer || !scene || !camera) return;
+      requestAnimationFrame(animateThreeAka);
+
+      if (kiParticles) {
+        kiParticles.rotation.y += 0.0012;
+        kiParticles.rotation.x += 0.0006;
+      }
+
+      camera.position.x += (mouse.x * 4 - camera.position.x) * 0.05;
+      camera.position.y += (-mouse.y * 4 - camera.position.y) * 0.05;
+
+      renderer.render(scene, camera);
+    }
+
+    const CHAVE_PIX_DIRETO_FORMATADA = "201.479.697-19";
+    const CHAVE_PIX_DIRETO_NUMEROS = "20147969719";
+    const CHAVE_PIX_VAKINHA = "6323222@vakinha.com.br";
+
+    let abaPixAtiva = 'direto';
+
+    function selecionarAbaPix(aba) {
+      tocarTaiko();
+      abaPixAtiva = aba;
+
+      const tabDireto = document.getElementById('tab-pix-direto');
+      const tabVakinha = document.getElementById('tab-pix-vakinha');
+      const painelDireto = document.getElementById('painel-pix-direto');
+      const painelVakinha = document.getElementById('painel-pix-vakinha');
+      const caption = document.getElementById('qrcode-caption');
+      const wppBtnLabel = document.getElementById('btn-share-wpp-label');
+
+      if (aba === 'direto') {
+        if (tabDireto) tabDireto.className = "flex-1 py-3 px-4 rounded-xl font-syne font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-lg";
+        if (tabVakinha) tabVakinha.className = "flex-1 py-3 px-4 rounded-xl font-syne font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all text-zinc-400 hover:text-white";
+        if (painelDireto) painelDireto.classList.remove('hidden');
+        if (painelVakinha) painelVakinha.classList.add('hidden');
+        if (caption) {
+          caption.innerHTML = '<i data-lucide="scan" class="w-3.5 h-3.5 text-emerald-400"></i><span>Aponte o app do banco para pagar o Pix da conta do Daniel</span>';
+        }
+        if (wppBtnLabel) {
+          wppBtnLabel.innerText = "Compartilhar Pix Conta no WhatsApp";
+        }
+        gerarQRCode(CHAVE_PIX_DIRETO_NUMEROS);
+      } else {
+        if (tabVakinha) tabVakinha.className = "flex-1 py-3 px-4 rounded-xl font-syne font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-aka-red to-red-700 text-white shadow-lg";
+        if (tabDireto) tabDireto.className = "flex-1 py-3 px-4 rounded-xl font-syne font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all text-zinc-400 hover:text-white";
+        if (painelVakinha) painelVakinha.classList.remove('hidden');
+        if (painelDireto) painelDireto.classList.add('hidden');
+        if (caption) {
+          caption.innerHTML = '<i data-lucide="scan" class="w-3.5 h-3.5 text-aka-gold"></i><span>Aponte o app do banco para pagar o Pix da Vakinha Online</span>';
+        }
+        if (wppBtnLabel) {
+          wppBtnLabel.innerText = "Compartilhar Pix Vakinha no WhatsApp";
+        }
+        gerarQRCode(CHAVE_PIX_VAKINHA);
+      }
+
+      if (window.lucide && typeof lucide.createIcons === 'function') {
+        lucide.createIcons();
+      }
+    }
+
+    function abrirPixDireto() {
+      selecionarAbaPix('direto');
+      const el = document.getElementById('terminal-pix');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function abrirPixVakinha() {
+      selecionarAbaPix('vakinha');
+      const el = document.getElementById('terminal-pix');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function gerarQRCode(texto) {
+      const qrel = document.getElementById('qrcode-main');
+      if (qrel && typeof QRCode !== 'undefined') {
+        qrel.innerHTML = "";
+        try {
+          new QRCode(qrel, {
+            text: texto,
+            width: 165,
+            height: 165,
+            colorDark: "#08080a",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        } catch (err) {
+          console.warn("Erro ao gerar QRCode:", err);
+        }
+      }
+    }
+
+    function copiarTextoClipboard(texto, onSucesso) {
+      const input = document.createElement("input");
+      input.value = texto;
+      document.body.appendChild(input);
+      input.select();
+      try {
+        document.execCommand('copy');
+        if (onSucesso) onSucesso();
+      } catch (e) {
+        console.error("Falha ao copiar:", e);
+      }
+      document.body.removeChild(input);
+    }
+
+    function copiarPixCPF() {
+      tocarTaiko();
+      dispararConfetes();
+      copiarTextoClipboard(CHAVE_PIX_DIRETO_FORMATADA, () => {
+        mostrarToastAka("Pix Conta do Daniel Copiado!", CHAVE_PIX_DIRETO_FORMATADA, "emerald");
+      });
+      const lbl = document.getElementById('btn-copy-label-direto');
+      if (lbl) {
+        lbl.innerText = "OSS! COPIADO!";
+        setTimeout(() => { lbl.innerText = "COPIAR PIX"; }, 2500);
+      }
+    }
+
+    function copiarPixCPFSemFormatacao() {
+      tocarTaiko();
+      dispararConfetes();
+      copiarTextoClipboard(CHAVE_PIX_DIRETO_NUMEROS, () => {
+        mostrarToastAka("Números do CPF Copiados!", CHAVE_PIX_DIRETO_NUMEROS, "emerald");
+      });
+    }
+
+    function copiarPixVakinha() {
+      tocarTaiko();
+      dispararConfetes();
+      copiarTextoClipboard(CHAVE_PIX_VAKINHA, () => {
+        mostrarToastAka("Pix Vakinha Copiado com Sucesso!", CHAVE_PIX_VAKINHA, "red");
+      });
+      const lbl = document.getElementById('btn-copy-label-vakinha');
+      if (lbl) {
+        lbl.innerText = "OSS! COPIADO!";
+        setTimeout(() => { lbl.innerText = "COPIAR PIX"; }, 2500);
+      }
+    }
+
+    function copiarPixAtivo() {
+      if (abaPixAtiva === 'direto') {
+        copiarPixCPF();
+      } else {
+        copiarPixVakinha();
+      }
+    }
+
+    function dispararConfetes() {
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 75,
+          spread: 85,
+          origin: { y: 0.72 },
+          colors: ['#059669', '#C41E24', '#D4AF37', '#ffffff']
+        });
+      }
+    }
+
+    function mostrarToastAka(titulo, chave, tema) {
+      const toast = document.getElementById('toast-pix');
+      const icon = document.getElementById('toast-icon');
+      const tTitle = document.getElementById('toast-msg-title');
+      const tKey = document.getElementById('toast-msg-key');
+      if (!toast) return;
+
+      if (tTitle) tTitle.innerText = titulo;
+      if (tKey) tKey.innerText = chave;
+
+      if (icon) {
+        if (tema === 'emerald') {
+          icon.className = "w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-xs";
+          toast.className = "fixed top-6 right-6 z-50 transform transition-all duration-300 pointer-events-none flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-aka-card border-2 border-emerald-500 text-white shadow-2xl translate-y-0 opacity-100";
+        } else {
+          icon.className = "w-7 h-7 rounded-full bg-aka-red text-white flex items-center justify-center font-bold text-xs";
+          toast.className = "fixed top-6 right-6 z-50 transform transition-all duration-300 pointer-events-none flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-aka-card border-2 border-aka-red text-white shadow-aka-fire translate-y-0 opacity-100";
+        }
+      }
+
+      setTimeout(() => {
+        toast.classList.add('-translate-y-24', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3500);
+    }
+
+    // COMPARTILHAMENTO INTELIGENTE NO WHATSAPP CONFORME A ABA SELECIONADA
+    function compartilharWhatsApp() {
+      tocarTaiko();
+      let msg = "";
+
+      if (abaPixAtiva === 'direto') {
+        // Mensagem focada no Pix direto da conta do Daniel (CPF)
+        msg = encodeURIComponent(
+          "🥋 *OSS! Apoio ao atleta Daniel no Brasileiro de Karatê 2026!* 🥋\n\n" +
+          "Daniel tem 11 anos, treina na AKA VNI em Venda Nova do Imigrante/ES, é campeão estadual e disputará as duas finais nacionais em Londrina/PR.\n\n" +
+          "👉 *Pix Direto na Conta do Atleta (Sem Intermediários / Sem Taxas):*\n" +
+          "• *Chave Pix (CPF):* 201.479.697-19\n" +
+          "• *Beneficiário:* Daniel Guimarães\n" +
+          "• *Origem:* Venda Nova do Imigrante - ES\n\n" +
+          "Qualquer contribuição ajuda no transporte, hospedagem e inscrição. Muito obrigado pelo seu apoio! OSS!"
+        );
+      } else {
+        // Mensagem focada na Vakinha Online Oficial
+        msg = encodeURIComponent(
+          "🥋 *OSS! Apoio ao atleta Daniel no Brasileiro de Karatê 2026!* 🥋\n\n" +
+          "Daniel tem 11 anos, treina na AKA VNI em Venda Nova do Imigrante/ES, é campeão estadual e disputará as duas finais nacionais em Londrina/PR.\n\n" +
+          "👉 *Campanha Oficial na Vakinha Online:*\n" +
+          "• *Chave Pix Vakinha:* 6323222@vakinha.com.br\n" +
+          "• *Link para Doação / Cartão:* https://www.vakinha.com.br/6323222\n" +
+          "• *Organizador:* Rodrigo Guimarães Berudio\n" +
+          "• *ID:* #6323222\n\n" +
+          "Qualquer quantia faz toda a diferença para o nosso guerreiro! OSS!"
+        );
+      }
+
+      window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
+    }
+
+    // EFEITO 3D TILT IDÊNTICO PARA O MEDALHÃO SUPERIOR
+    function initEmblem3DTilt() {
+      const container = document.getElementById('emblem-container');
+      const card = container ? container.querySelector('.emblem-3d-card') : null;
+      if (!container || !card) return;
+
+      let bounds;
+      function updateBounds() { bounds = container.getBoundingClientRect(); }
+      updateBounds();
+      window.addEventListener('resize', updateBounds);
+      window.addEventListener('scroll', updateBounds, { passive: true });
+
+      function handleMove(clientX, clientY) {
+        if (!bounds) updateBounds();
+        const mouseX = clientX - bounds.left;
+        const mouseY = clientY - bounds.top;
+        const xPct = mouseX / bounds.width - 0.5;
+        const yPct = mouseY / bounds.height - 0.5;
+
+        const rotateX = -yPct * 28;
+        const rotateY = xPct * 28;
+
+        card.style.transform = `rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateZ(16px) scale(1.03)`;
+      }
+
+      container.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+      container.addEventListener('mouseleave', () => {
+        card.style.transform = 'rotateX(0deg) rotateY(0deg) translateZ(0px) scale(1)';
+      });
+      container.addEventListener('touchmove', (e) => {
+        if (e.touches && e.touches.length > 0) handleMove(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+      container.addEventListener('touchend', () => {
+        card.style.transform = 'rotateX(0deg) rotateY(0deg) translateZ(0px) scale(1)';
+      });
+    }
+
+    // EFEITO 3D TILT IDÊNTICO PARA O CARD DO PATROCINADOR (RB INFORMÁTICA)
+    function initSponsor3DTilt() {
+      const container = document.getElementById('sponsor-container');
+      const card = container ? container.querySelector('.sponsor-3d-card') : null;
+      if (!container || !card) return;
+
+      let bounds;
+      function updateBounds() { bounds = container.getBoundingClientRect(); }
+      updateBounds();
+      window.addEventListener('resize', updateBounds);
+      window.addEventListener('scroll', updateBounds, { passive: true });
+
+      function handleMove(clientX, clientY) {
+        if (!bounds) updateBounds();
+        const mouseX = clientX - bounds.left;
+        const mouseY = clientY - bounds.top;
+        const xPct = mouseX / bounds.width - 0.5;
+        const yPct = mouseY / bounds.height - 0.5;
+
+        const rotateX = -yPct * 26;
+        const rotateY = xPct * 26;
+
+        card.style.transform = `rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateZ(18px) scale(1.04)`;
+      }
+
+      container.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+      container.addEventListener('mouseleave', () => {
+        card.style.transform = 'rotateX(0deg) rotateY(0deg) translateZ(0px) scale(1)';
+      });
+      container.addEventListener('touchmove', (e) => {
+        if (e.touches && e.touches.length > 0) handleMove(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+      container.addEventListener('touchend', () => {
+        card.style.transform = 'rotateX(0deg) rotateY(0deg) translateZ(0px) scale(1)';
+      });
+    }
+
+    // Inicialização Geral da Página
+    window.onload = function() {
+      initThreeAka();
+      initEmblem3DTilt();
+      initSponsor3DTilt();
+      if (window.lucide && typeof lucide.createIcons === 'function') {
+        lucide.createIcons();
+      }
+      selecionarAbaPix('direto');
+      restaurarFotosSalvas();
+    };
+  </script>
+
+</body>
+</html>
